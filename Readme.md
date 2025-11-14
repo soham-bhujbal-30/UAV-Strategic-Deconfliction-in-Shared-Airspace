@@ -130,10 +130,6 @@ You should see all tests pass.
 
 ---
 
-## 📄 License
-MIT License (or specify your own here).
-
----
 
 ## 🙌 Acknowledgments
 Built for FlytBase as part of a technical assessment.
