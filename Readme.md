@@ -48,8 +48,8 @@ The system acts as a **central authority** that verifies whether a drone's plann
 ### 1. **Clone or Download the Repository**
 ```
 # Example
-git clone <repo-url>
-cd <folder>
+git clone <https://github.com/soham-bhujbal-30/UAV-Strategic-Deconfliction-in-Shared-Airspace.git>
+
 ```
 
 ### 2. **Install Python Dependencies**
