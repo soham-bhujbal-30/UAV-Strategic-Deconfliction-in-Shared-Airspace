@@ -133,4 +133,18 @@ You should see all tests pass.
 
 ## 🙌 Acknowledgments
 Built for FlytBase as part of a technical assessment.
+Run Automated Tests
+This will run the formal test suite and confirm that all logic is working as expected.
+python -m pytest -v
+
+
+Expected Output (in terminal):
+============================= test session starts ==============================
+...
+test_conflict_checker.py::test_scenario_clear PASSED
+test_conflict_checker.py::test_scenario_head_on_conflict PASSED
+test_conflict_checker.py::test_scenario_crossing_conflict PASSED
+test_conflict_checker.py::test_scenario_3d_near_miss_is_clear PASSED
+test_conflict_checker.py::test_scenario_time_window_violation PASSED
+
 
