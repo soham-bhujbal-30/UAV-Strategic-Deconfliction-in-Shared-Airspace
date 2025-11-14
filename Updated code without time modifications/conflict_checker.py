@@ -1,0 +1,176 @@
+import math
+from typing import List, Optional
+from data_models import (
+    Waypoint, 
+    TimedWaypoint, 
+    PrimaryMission, 
+    SimulatedFlight, 
+    Conflict, 
+    ConflictReport
+)
+
+# --- Helper Functions ---
+
+def calculate_distance(wp1: Waypoint, wp2: Waypoint) -> float:
+    """Calculates the 3D Euclidean distance between two waypoints."""
+    # <<< 3D UPDATE >>>
+    return math.sqrt((wp1.x - wp2.x)**2 + (wp1.y - wp2.y)**2 + (wp1.z - wp2.z)**2)
+
+def interpolate_position(start_wp: TimedWaypoint, end_wp: TimedWaypoint, current_time: float) -> Waypoint:
+    """
+    Linearly interpolates the (x, y, z) position of a drone at a specific time.
+    """
+    
+    # Handle edge case: if time is outside the segment, return the boundary
+    if current_time <= start_wp.time:
+        return Waypoint(x=start_wp.x, y=start_wp.y, z=start_wp.z)
+    if current_time >= end_wp.time:
+        return Waypoint(x=end_wp.x, y=end_wp.y, z=end_wp.z)
+
+    # Calculate fraction of time elapsed in this segment
+    segment_duration = end_wp.time - start_wp.time
+    # Avoid division by zero if start and end time are the same
+    if segment_duration == 0:
+        return Waypoint(x=start_wp.x, y=start_wp.y, z=start_wp.z)
+        
+    time_elapsed = current_time - start_wp.time
+    fraction = time_elapsed / segment_duration
+
+    # Linearly interpolate x, y, and z
+    # <<< 3D UPDATE >>>
+    interp_x = start_wp.x + (end_wp.x - start_wp.x) * fraction
+    interp_y = start_wp.y + (end_wp.y - start_wp.y) * fraction
+    interp_z = start_wp.z + (end_wp.z - start_wp.z) * fraction
+    
+    return Waypoint(x=interp_x, y=interp_y, z=interp_z)
+
+# --- Core Logic Functions ---
+
+def _convert_mission_to_trajectory(mission: PrimaryMission) -> List[TimedWaypoint]:
+    """
+    Converts a PrimaryMission (waypoints + speed) into a discrete
+    time-based trajectory (list of TimedWaypoints).
+    """
+    trajectory = []
+    current_time = mission.mission_start_time
+    
+    if not mission.waypoints:
+        return []
+
+    # Add the first waypoint at the start time
+    first_wp = mission.waypoints[0]
+    # <<< 3D UPDATE >>>
+    trajectory.append(TimedWaypoint(x=first_wp.x, y=first_wp.y, z=first_wp.z, time=current_time))
+
+    # Iterate through the rest of the waypoints
+    for i in range(len(mission.waypoints) - 1):
+        wp1 = mission.waypoints[i]
+        wp2 = mission.waypoints[i+1]
+        
+        distance = calculate_distance(wp1, wp2) # This is now 3D distance
+        
+        if mission.speed <= 0:
+            if distance > 0:
+                raise ValueError("Cannot travel between waypoints with zero or negative speed.")
+            if not any(t.x == wp2.x and t.y == wp2.y and t.z == wp2.z for t in trajectory):
+                 # <<< 3D UPDATE >>>
+                 trajectory.append(TimedWaypoint(x=wp2.x, y=wp2.y, z=wp2.z, time=current_time))
+            continue
+            
+        time_to_travel = distance / mission.speed
+        current_time += time_to_travel
+        
+        # <<< 3D UPDATE >>>
+        trajectory.append(TimedWaypoint(x=wp2.x, y=wp2.y, z=wp2.z, time=current_time))
+        
+    return trajectory
+
+def _find_drone_position(trajectory: List[TimedWaypoint], current_time: float) -> Optional[Waypoint]:
+    """
+    Finds a drone's (x, y, z) position at a specific time from its trajectory.
+    """
+    for i in range(len(trajectory) - 1):
+        wp_start = trajectory[i]
+        wp_end = trajectory[i+1]
+        
+        if wp_start.time <= current_time <= wp_end.time:
+            return interpolate_position(wp_start, wp_end, current_time)
+            
+    return None
+
+# --- Main Public Function ---
+
+def check_for_conflicts(
+    primary_mission: PrimaryMission, 
+    simulated_flights: List[SimulatedFlight], 
+    safety_buffer: float, 
+    time_step: float = 1.0
+) -> ConflictReport:
+    """
+    Main 3D deconfliction function.
+    """
+    
+    try:
+        primary_trajectory = _convert_mission_to_trajectory(primary_mission)
+    except ValueError as e:
+        return ConflictReport(status="CONFLICT DETECTED", conflicts=[
+            Conflict(time=0, location=Waypoint(0,0,0), conflicted_with_flight_id=f"Mission Error: {e}")
+        ])
+
+    if not primary_trajectory:
+        return ConflictReport(status="CLEAR")
+
+    mission_start = primary_trajectory[0].time
+    mission_end = primary_trajectory[-1].time
+
+    if mission_end > primary_mission.mission_end_time:
+        return ConflictReport(
+            status="CONFLICT DETECTED",
+            conflicts=[Conflict(
+                time=mission_end,
+                location=primary_trajectory[-1],
+                conflicted_with_flight_id="MISSION_TIME_WINDOW_EXCEEDED"
+            )]
+        )
+
+    all_conflicts = []
+    
+    current_time = mission_start
+    while current_time <= mission_end:
+        
+        primary_pos = _find_drone_position(primary_trajectory, current_time)
+        if primary_pos is None:
+            current_time += time_step
+            continue
+
+        for sim_flight in simulated_flights:
+            sim_pos = _find_drone_position(sim_flight.trajectory, current_time)
+            
+            if sim_pos is None:
+                continue
+            
+            distance = calculate_distance(primary_pos, sim_pos)
+            
+            if distance < safety_buffer:
+                conflict = Conflict(
+                    time=round(current_time, 2),
+                    location=primary_pos, # This is now a 3D Waypoint
+                    conflicted_with_flight_id=sim_flight.flight_id
+                )
+                all_conflicts.append(conflict)
+
+        current_time += time_step
+
+    if all_conflicts:
+        # De-duplicate conflicts that span multiple time steps
+        unique_conflicts = []
+        seen_ids_at_time = set()
+        for conflict in all_conflicts:
+            key = (conflict.conflicted_with_flight_id, conflict.time)
+            if key not in seen_ids_at_time:
+                unique_conflicts.append(conflict)
+                seen_ids_at_time.add(key)
+        
+        return ConflictReport(status="CONFLICT DETECTED", conflicts=unique_conflicts)
+    
+    return ConflictReport(status="CLEAR")
