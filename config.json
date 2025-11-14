@@ -1,0 +1,121 @@
+{
+    "clear_scenario": {
+        "scenario_name": "Clear Scenario",
+        "primary_mission": {
+            "waypoints": [
+                {"x": 0, "y": 50, "z": 50},
+                {"x": 100, "y": 50, "z": 50}
+            ],
+            "speed": 10.0,
+            "mission_start_time": 0.0,
+            "mission_end_time": 20.0
+        },
+        "simulated_flights": [
+            {
+                "flight_id": "Drone-A (Clear)",
+                "trajectory": [
+                    {"x": 0, "y": 60, "z": 50, "time": 30.0},
+                    {"x": 100, "y": 60, "z": 50, "time": 40.0}
+                ]
+            }
+        ]
+    },
+    "head_on_conflict": {
+        "scenario_name": "Head-On Conflict",
+        "primary_mission": {
+            "waypoints": [
+                {"x": 0, "y": 50, "z": 50},
+                {"x": 100, "y": 50, "z": 50}
+            ],
+            "speed": 10.0,
+            "mission_start_time": 0.0,
+            "mission_end_time": 21.0
+        },
+        "simulated_flights": [
+            {
+                "flight_id": "Drone-B (Head-On)",
+                "trajectory": [
+                    {"x": 100, "y": 50, "z": 50, "time": 0.0},
+                    {"x": 0, "y": 50, "z": 50, "time": 10.0}
+                ]
+            }
+        ]
+    },
+    "crossing_conflict": {
+        "scenario_name": "Crossing Path Conflict",
+        "primary_mission": {
+            "waypoints": [
+                {"x": 0, "y": 50, "z": 50},
+                {"x": 100, "y": 50, "z": 50}
+            ],
+            "speed": 10.0,
+            "mission_start_time": 0.0,
+            "mission_end_time": 20.0
+        },
+        "simulated_flights": [
+            {
+                "flight_id": "Drone-C (Crossing)",
+                "trajectory": [
+                    {"x": 50, "y": 0, "z": 50, "time": 0.0},
+                    {"x": 50, "y": 100, "z": 50, "time": 10.0}
+                ]
+            }
+        ]
+    },
+    "near_miss_3d": {
+        "scenario_name": "3D Near Miss (Altitude Clear)",
+        "primary_mission": {
+            "waypoints": [
+                {"x": 0, "y": 50, "z": 50},
+                {"x": 100, "y": 50, "z": 50}
+            ],
+            "speed": 10.0,
+            "mission_start_time": 0.0,
+            "mission_end_time": 20.0
+        },
+        "simulated_flights": [
+            {
+                "flight_id": "Drone-D (Near Miss)",
+                "trajectory": [
+                    {"x": 50, "y": 0, "z": 75, "time": 0.0},
+                    {"x": 50, "y": 100, "z": 75, "time": 10.0}
+                ]
+            }
+        ]
+    },
+    "cylindrical_test": {
+        "scenario_name": "Cylindrical Buffer Logic Test",
+        "primary_mission": {
+            "waypoints": [
+                {"x": 0, "y": 50, "z": 50},
+                {"x": 100, "y": 50, "z": 50}
+            ],
+            "speed": 10.0,
+            "mission_start_time": 0.0,
+            "mission_end_time": 20.0
+        },
+        "simulated_flights": [
+            {
+                "flight_id": "Drone-H (Horizontal Close / V-Safe)",
+                "trajectory": [
+                    {"x": 50, "y": 51, "z": 60, "time": 5.0},
+                    {"x": 50, "y": 51, "z": 60, "time": 5.1}
+                ]
+            },
+            {
+                "flight_id": "Drone-V (Vertical Close / H-Safe)",
+                "trajectory": [
+                    {"x": 50, "y": 60, "z": 51, "time": 5.0},
+                    {"x": 50, "y": 60, "z": 51, "time": 5.1}
+                ]
+            },
+            {
+                "flight_id": "Drone-C (CONFLICT)",
+                "trajectory": [
+                    {"x": 50, "y": 51, "z": 51, "time": 5.0},
+                    {"x": 50, "y": 51, "z": 51, "time": 5.1}
+                ]
+            }
+        ]
+    }
+}
