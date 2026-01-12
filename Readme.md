@@ -1,6 +1,6 @@
 # UAV Strategic Deconfliction System
 
-A **4D (3D space + time) deconfliction system** for drone missions operating in shared airspace. Built as a technical assessment for **FlytBase**, this system analyzes proposed drone missions to ensure strategic safety before launch.
+A **4D (3D space + time) deconfliction system** for drone missions operating in shared airspace. Built as a technical Support for **FlytBase**, this system analyzes proposed drone missions to ensure strategic safety before launch.
 
 ---
 
